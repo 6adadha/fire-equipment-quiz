@@ -26,7 +26,7 @@ button{cursor:pointer}.primary{background:var(--accent);color:#fff;border-color:
 <div class="controls">
 <select id="year"><option value="all">全部年份</option></select>
 <select id="category"><option value="all">全部類別</option></select>
-<select id="mode"><option value="sequential">依年份順序</option><option value="random">隨機刷題</option><option value="wrong">只刷錯題</option><option value="bookmarked">只刷收藏</option></select>
+<select id="mode"><option value="random" selected>隨機刷題</option><option value="sequential">依年份順序</option><option value="wrong">只刷錯題</option><option value="bookmarked">只刷收藏</option></select>
 <button id="apply" class="primary">開始／重新篩選</button>
 </div>
 <div class="stats"><span>本輪：<b id="roundCount">0</b> 題</span><span>已答：<b id="answered">0</b></span><span>答對：<b id="correct">0</b></span><span>正確率：<b id="rate">—</b></span></div>
@@ -48,7 +48,7 @@ function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",
 function render(){stats();const box=$("quiz");if(!pool.length){box.innerHTML='<div class="card empty">這個篩選條件目前沒有題目。</div>';return}const q=pool[index],book=!!state.bookmarks[q.id];selected=null;locked=false;
 box.innerHTML=`<div class="card"><div class="badges"><span class="badge">${q.year} 年｜民國 ${q.roc_year} 年</span><span class="badge">${q.subject}</span><span class="badge">${q.category}</span><span class="badge">第 ${q.no} 題</span></div><div class="question">${esc(q.question)}</div><div class="options">${["A","B","C","D"].map(k=>`<button class="option" data-k="${k}"><span class="letter">${k}</span><span>${esc(q.options[k])}</span></button>`).join("")}</div><div id="feedback" class="feedback"></div><div class="actions"><button id="bookmark">${book?"★ 已收藏":"☆ 收藏"}</button><div class="right"><button id="next" class="primary">下一題</button></div></div></div>`;
 document.querySelectorAll(".option").forEach(b=>b.onclick=()=>{if(locked)return;selected=b.dataset.k;document.querySelectorAll(".option").forEach(x=>x.classList.toggle("selected",x.dataset.k===selected));check()});
-$("next").onclick=()=>{index=index<pool.length-1?index+1:0;render()};$("bookmark").onclick=()=>{state.bookmarks[q.id]=!state.bookmarks[q.id];save();render()}}
+$("next").onclick=()=>{if(index<pool.length-1){index++}else{index=0;if($("mode").value==="random")shuffle(pool)}render()};$("bookmark").onclick=()=>{state.bookmarks[q.id]=!state.bookmarks[q.id];save();render()}}
 function check(){if(locked||!selected)return;locked=true;const q=pool[index],ok=q.answers.includes(selected);state.history[q.id]={selected,correct:ok,at:Date.now()};save();document.querySelectorAll(".option").forEach(b=>{let k=b.dataset.k;b.classList.remove("selected");if(q.answers.includes(k))b.classList.add("correct");else if(k===selected&&!ok)b.classList.add("wrong")});const f=$("feedback");f.className="feedback "+(ok?"ok":"bad");f.innerHTML=(ok?"答對。":"答錯。")+` 官方答案：<b>${q.answers.join(" / ")}</b>`+(q.answer_note?`<br>${esc(q.answer_note)}`:"");stats()}
 $("apply").onclick=buildPool;buildPool();
 </script></body></html>
